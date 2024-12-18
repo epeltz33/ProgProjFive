@@ -2,6 +2,7 @@ package adts;
 
 import java.util.Iterator;
 import java.util.ArrayList;
+import java.util.Random;
 
 import interfaces.*;
 import iterators.BSTIterator;
@@ -122,29 +123,6 @@ public class BinarySearchTree<T extends Comparable<T>>
         }
     }
 
-    // this implementation of a size operation demonstrates that
-    // it is possible to visit all the nodes of the tree without recursion
-    public int size2() {
-        int count = 0;
-        if (root != null) {
-            LLStack<BSTNode<T>> hold = new LLStack<BSTNode<T>>();
-            BSTNode<T> currNode;
-            hold.push(root);
-            while (!hold.isEmpty()) {
-                currNode = hold.peek();
-                hold.pop();
-                count++;
-                if (currNode.getLeft() != null) {
-                    hold.push(currNode.getLeft());
-                }
-                if (currNode.getRight() != null) {
-                    hold.push(currNode.getRight());
-                }
-            }
-        }
-        return count;
-    }
-
 
     public boolean isEmpty() {
         return (root == null);
@@ -198,30 +176,131 @@ public class BinarySearchTree<T extends Comparable<T>>
         }
     }
 
-    // -------- traversal related code ----------------
+    // New method: Calculate tree height recursively
+    public int treeHeight() {
+        return recTreeHeight(root);
+    }
 
+    private int recTreeHeight(BSTNode<T> tree) {
+        if (tree == null) {
+            return -1;
+        }
+        int leftHeight = recTreeHeight(tree.getLeft());
+        int rightHeight = recTreeHeight(tree.getRight());
+        return Math.max(leftHeight, rightHeight) + 1;
+    }
+
+    // New method: Calculate tree height iteratively
+    public int treeHeight2() {
+        if (root == null) {
+            return -1;
+        }
+
+        LLQ<BSTNode<T>> queue = new LLQ<>();
+        queue.enqueue(root);
+        int height = -1;
+
+        while (!queue.isEmpty()) {
+            int levelSize = getQueueSize(queue);
+            height++;
+
+            while (levelSize > 0) {
+                BSTNode<T> current = queue.dequeue();
+                if (current.getLeft() != null) {
+                    queue.enqueue(current.getLeft());
+                }
+                if (current.getRight() != null) {
+                    queue.enqueue(current.getRight());
+                }
+                levelSize--;
+            }
+        }
+        return height;
+    }
+
+    private int getQueueSize(LLQ<BSTNode<T>> queue) {
+        int count = 0;
+        LLQ<BSTNode<T>> tempQueue = new LLQ<>();
+        while (!queue.isEmpty()) {
+            tempQueue.enqueue(queue.dequeue());
+            count++;
+        }
+        while (!tempQueue.isEmpty()) {
+            queue.enqueue(tempQueue.dequeue());
+        }
+        return count;
+    }
+
+    // New method: Check if tree is perfect recursively
+    public boolean isPerfect() {
+        return recIsPerfect(root);
+    }
+
+    private boolean recIsPerfect(BSTNode<T> tree) {
+        if (tree == null) {
+            return true;
+        }
+        int leftHeight = recTreeHeight(tree.getLeft());
+        int rightHeight = recTreeHeight(tree.getRight());
+
+        if (leftHeight != rightHeight) {
+            return false;
+        }
+        return recIsPerfect(tree.getLeft()) && recIsPerfect(tree.getRight());
+    }
+
+    // New method: Check if tree is perfect iteratively
+    public boolean isPerfect2() {
+        if (root == null) {
+            return true;
+        }
+        int height = treeHeight2();
+        int expectedSize = (1 << (height + 1)) - 1; // 2^(h+1) - 1
+        return size() == expectedSize;
+    }
+
+    // New method: Calculate balance score based on subtree sizes
+    public double balanceScore1() {
+        if (root == null) {
+            return 0.0;
+        }
+        int leftSize = (root.getLeft() != null) ? recSize(root.getLeft()) : 0;
+        int rightSize = (root.getRight() != null) ? recSize(root.getRight()) : 0;
+        return Math.abs(leftSize - rightSize) / (double)size();
+    }
+
+    // New method: Calculate balance score based on height difference
+    public int balanceScore2() {
+        if (root == null) {
+            return 0;
+        }
+        int actualHeight = treeHeight();
+        int size = size();
+        int minHeight = (int)(Math.log(size + 1) / Math.log(2)) - 1;
+        return actualHeight - minHeight;
+    }
+
+    // Modified to support RANDOM traversal
     public void setTraversalType(String order) {
         if (order.equalsIgnoreCase("pre")) {
             travType = TraversalType.PREORDER;
         }
+        else if (order.equalsIgnoreCase("in")) {
+            travType = TraversalType.INORDER;
+        }
+        else if (order.equalsIgnoreCase("post")) {
+            travType = TraversalType.POSTORDER;
+        }
+        else if (order.equalsIgnoreCase("random")) {
+            travType = TraversalType.RANDOM;
+        }
         else {
-            if (order.equalsIgnoreCase("in")) {
-                travType = TraversalType.INORDER;
-            }
-            else {
-                if (order.equalsIgnoreCase("post")) {
-                    travType = TraversalType.POSTORDER;
-                }
-                else {
-                    travType = TraversalType.INORDER;
-                }
-            }
+            travType = TraversalType.INORDER;
         }
     }
 
-    // iterator object instantiation for enhanced for loop:
+    // Modified to support RANDOM traversal
     public Iterator<T> iterator() {
-
         travList = new ArrayList<>(size());
 
         switch (travType) {
@@ -233,6 +312,9 @@ public class BinarySearchTree<T extends Comparable<T>>
                 break;
             case POSTORDER:
                 postOrder(root);
+                break;
+            case RANDOM:
+                randomOrder(root);
                 break;
         }
 
@@ -263,9 +345,27 @@ public class BinarySearchTree<T extends Comparable<T>>
         }
     }
 
-    // ------------------------------------------------
+    // New private method to support RANDOM traversal
+    private void randomOrder(BSTNode<T> tree) {
+        if (tree == null) {
+            return;
+        }
+        ArrayList<T> elements = new ArrayList<>();
+        collectElements(tree, elements);
+        Random rand = new Random();
+        while (!elements.isEmpty()) {
+            int index = rand.nextInt(elements.size());
+            travList.add(elements.remove(index));
+        }
+    }
 
-
+    private void collectElements(BSTNode<T> tree, ArrayList<T> elements) {
+        if (tree != null) {
+            elements.add(tree.getData());
+            collectElements(tree.getLeft(), elements);
+            collectElements(tree.getRight(), elements);
+        }
+    }
 
     public void rebalance() {
         rebalanceArray = (T[]) new Comparable[size()];
@@ -291,5 +391,4 @@ public class BinarySearchTree<T extends Comparable<T>>
             recRebalance(mid+1, last);
         }
     }
-
 }
