@@ -4,12 +4,12 @@ import interfaces.StackInterface;
 import nodes.LLNode;
 
 public class LLStack<E> implements StackInterface<E> {
-	
+
 	LLNode<E> top;
 
 	@Override
 	public void push(E element) {
-		LLNode<E> newNode = new LLNode(element);
+		LLNode<E> newNode = new LLNode<>(element);
 		newNode.setNext(top);
 		top = newNode;
 	}
@@ -35,7 +35,7 @@ public class LLStack<E> implements StackInterface<E> {
 	public boolean isFull() {
 		return false;
 	}
-	
+
 	public String toString() {
 		StringBuilder stackStr = new StringBuilder("\n---------\n");
 		LLNode<E> ptr = top;

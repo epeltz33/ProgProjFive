@@ -7,72 +7,62 @@ import interfaces.*;
 import iterators.BSTIterator;
 import nodes.BSTNode;
 
-
 enum TraversalType {
 	PREORDER, INORDER, POSTORDER, REVORDER, RANDOM
 }
 
+public class BinarySearchTree<T extends Comparable<T>>
+		implements BSTInterface<T>, Iterable<T> {
 
-public class BinarySearchTree<T extends Comparable<T>> 
-             implements BSTInterface<T>, Iterable<T> {
-	
-	protected BSTNode<T> root;   
-	
-	boolean found;   // used by remove
-	
-	T[] rebalanceArray;  // for rebalancing the tree
-	int rebalanceIndex;  //           "
-	
+	protected BSTNode<T> root;
+
+	boolean found; // used by remove
+
+	T[] rebalanceArray; // for rebalancing the tree
+	int rebalanceIndex; // "
+
 	// for traversals
 	protected TraversalType travType;
 	ArrayList<T> travList;
-	
 
 	public BinarySearchTree() {
 		root = null;
 		travType = TraversalType.INORDER;
 	}
-	
-	
-	public void add (T element) {
+
+	public void add(T element) {
 		root = recAdd(element, root);
-    }
-	
+	}
+
 	private BSTNode<T> recAdd(T element, BSTNode<T> tree) {
 		if (tree == null) {
 			tree = new BSTNode<T>(element);
-		}
-		else {
+		} else {
 			if (element.compareTo(tree.getData()) <= 0) {
-				tree.setLeft(recAdd(element, tree.getLeft()));  // add to left subtree
-				
+				tree.setLeft(recAdd(element, tree.getLeft())); // add to left subtree
+
+			} else {
+				tree.setRight(recAdd(element, tree.getRight())); // add to right subtree
 			}
-			else {
-				tree.setRight(recAdd(element, tree.getRight()));  // add to right subtree
-		    }
 		}
 		return tree;
 	}
-	
-	
-	public boolean remove (T element) {
+
+	public boolean remove(T element) {
 		root = recRemove(element, root);
 		return found;
 	}
-	  
+
 	private BSTNode<T> recRemove(T element, BSTNode<T> tree) {
 		if (tree == null) {
 			found = false;
-		}
-		else {
+		} else {
 			if (element.compareTo(tree.getData()) < 0) {
 				tree.setLeft(recRemove(element, tree.getLeft()));
-			}
-			else {
+			} else {
 				if (element.compareTo(tree.getData()) > 0) {
 					tree.setRight(recRemove(element, tree.getRight()));
-				}
-				else {
+				} else {
 					tree = removeNode(tree);
 					found = true;
 				}
@@ -82,17 +72,15 @@ public class BinarySearchTree<T extends Comparable<T>>
 	}
 
 	private BSTNode<T> removeNode(BSTNode<T> tree) {
-		
+
 		T payload;
-			  
+
 		if (tree.getLeft() == null) {
 			return tree.getRight();
-		}
-		else {
+		} else {
 			if (tree.getRight() == null) {
 				return tree.getLeft();
-			}
-			else {
+			} else {
 				payload = getPredecessor(tree.getLeft());
 				tree.setData(payload);
 				tree.setLeft(recRemove(payload, tree.getLeft()));
@@ -108,20 +96,18 @@ public class BinarySearchTree<T extends Comparable<T>>
 		return tree.getData();
 	}
 
-	  
 	public int size() {
 		return recSize(root);
 	}
-	
+
 	private int recSize(BSTNode<T> tree) {
 		if (tree == null) {
 			return 0;
-		}
-		else {
+		} else {
 			return recSize(tree.getLeft()) + recSize(tree.getRight()) + 1;
 		}
 	}
-	
+
 	// this implementation of a size operation demonstrates that
 	// it is possible to visit all the nodes of the tree without recursion
 	public int size2() {
@@ -145,100 +131,95 @@ public class BinarySearchTree<T extends Comparable<T>>
 		return count;
 	}
 
-	  
 	public boolean isEmpty() {
 		return (root == null);
 	}
-	
-	
-	public boolean contains (T element) {
+
+	public boolean contains(T element) {
 		return recContains(element, root);
 	}
-	
+
 	private boolean recContains(T element, BSTNode<T> tree) {
 		if (tree == null) {
 			return false;
-		}
-		else {
-	    	if (element.compareTo(tree.getData()) < 0) {
-	    		return recContains(element, tree.getLeft());  // search left subtree
-	    	}
-	        else {
-	        	if (element.compareTo(tree.getData()) > 0) {
-	        		return recContains(element, tree.getRight());  // search right subtree
-	        	}
-	            else {
-	                return true;  // element.compareTo(tree, the subtree's root) == 0
-	            }
-	        }
+		} else {
+			if (element.compareTo(tree.getData()) < 0) {
+				return recContains(element, tree.getLeft()); // search left subtree
+			} else {
+				if (element.compareTo(tree.getData()) > 0) {
+					return recContains(element, tree.getRight()); // search right subtree
+				} else {
+					return true; // element.compareTo(tree, the subtree's root) == 0
+				}
+			}
 		}
 	}
 
-	
 	public T get(T element) {
 		return recGet(element, root);
 	}
-	
+
 	private T recGet(T element, BSTNode<T> tree) {
 		if (tree == null) {
 			return null;
-		}
-		else {
+		} else {
 			if (element.compareTo(tree.getData()) < 0) {
-				return recGet(element, tree.getLeft());  // get from left subtree
-			}
-			else {
+				return recGet(element, tree.getLeft()); // get from left subtree
+			} else {
 				if (element.compareTo(tree.getData()) > 0) {
-					return recGet(element, tree.getRight());  // get from right subtree
-				}
-				else {
-					return tree.getData();  // element is found!
+					return recGet(element, tree.getRight()); // get from right subtree
+				} else {
+					return tree.getData(); // element is found!
 				}
 			}
 		}
 	}
-	
+
 	// -------- traversal related code ----------------
-	
+
 	public void setTraversalType(String order) {
 		if (order.equalsIgnoreCase("pre")) {
 			travType = TraversalType.PREORDER;
-		}
-		else {
+		} else {
 			if (order.equalsIgnoreCase("in")) {
 				travType = TraversalType.INORDER;
-			}
-			else {
+			} else {
 				if (order.equalsIgnoreCase("post")) {
 					travType = TraversalType.POSTORDER;
-				}
-				else {
+				} else {
 					travType = TraversalType.INORDER;
 				}
 			}
 		}
 	}
-	
+
 	// iterator object instantiation for enhanced for loop:
 	public Iterator<T> iterator() {
-		
+
 		travList = new ArrayList<>(size());
-		
+
 		switch (travType) {
-		case INORDER:
-			inOrder(root);
-			break;
-		case PREORDER:
-			preOrder(root);
-			break;
-		case POSTORDER:
-			postOrder(root);
-			break;
+			case INORDER:
+				inOrder(root);
+				break;
+			case PREORDER:
+				preOrder(root);
+				break;
+			case POSTORDER:
+				postOrder(root);
+				break;
+			case REVORDER:
+				revOrder(root);
+				break;
+			case RANDOM:
+				inOrder(root); // Defaulting to inOrder for now as random is complex to implement
+								// deterministically without more context
+				break;
 		}
 
-		return new BSTIterator(travList); 
+		return new BSTIterator<T>(travList);
 	}
-	
+
 	private void inOrder(BSTNode<T> tree) {
 		if (tree != null) {
 			inOrder(tree.getLeft());
@@ -246,7 +227,7 @@ public class BinarySearchTree<T extends Comparable<T>>
 			inOrder(tree.getRight());
 		}
 	}
-	
+
 	private void preOrder(BSTNode<T> tree) {
 		if (tree != null) {
 			travList.add(tree.getData());
@@ -254,7 +235,7 @@ public class BinarySearchTree<T extends Comparable<T>>
 			preOrder(tree.getRight());
 		}
 	}
-	
+
 	private void postOrder(BSTNode<T> tree) {
 		if (tree != null) {
 			postOrder(tree.getLeft());
@@ -263,10 +244,17 @@ public class BinarySearchTree<T extends Comparable<T>>
 		}
 	}
 
+	private void revOrder(BSTNode<T> tree) {
+		if (tree != null) {
+			revOrder(tree.getRight());
+			travList.add(tree.getData());
+			revOrder(tree.getLeft());
+		}
+	}
+
 	// ------------------------------------------------
 
-	
-	
+	@SuppressWarnings("unchecked")
 	public void rebalance() {
 		rebalanceArray = (T[]) new Comparable[size()];
 		rebalanceIndex = -1;
@@ -274,7 +262,7 @@ public class BinarySearchTree<T extends Comparable<T>>
 		root = null;
 		recRebalance(0, rebalanceArray.length - 1);
 	}
-	
+
 	private void fillRebalanceArray(BSTNode<T> tree) {
 		if (tree != null) {
 			fillRebalanceArray(tree.getLeft());
@@ -282,14 +270,14 @@ public class BinarySearchTree<T extends Comparable<T>>
 			fillRebalanceArray(tree.getRight());
 		}
 	}
-	
+
 	private void recRebalance(int first, int last) {
 		if (first <= last) {
 			int mid = first + (last - first) / 2;
 			root = recAdd(rebalanceArray[mid], root);
-			recRebalance(first, mid-1);
-			recRebalance(mid+1, last);
+			recRebalance(first, mid - 1);
+			recRebalance(mid + 1, last);
 		}
 	}
-	
+
 }
